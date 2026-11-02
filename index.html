@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Great Candy Count</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:wght@600;800;900&display=swap">
+<style>
+/* Layout: a Halloween-night storybook scroll — hero count, then numbered chapters, each one big picture plus a few words */
+:root{
+  --night:#1c1233; --night-2:#2a1d4a; --card:#33245a; --line:#4d3a80;
+  --pumpkin:#ff8a1f; --corn:#ffd23f; --ghost:#fff7ec; --muted:#c9bde6;
+  --slime:#7be0a6; --berry:#ff5fa2; --sky:#6fc3ff; --cocoa:#b9773f; --salt:#e9dcc3;
+  --display:"Luckiest Guy","Arial Black",Impact,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--night);color:var(--ghost);font-family:var(--body);font-weight:600;font-size:17px;line-height:1.5;
+  background-image:radial-gradient(circle at 85% 2%, #3b2a66 0, transparent 30%),radial-gradient(circle at 8% 40%, #241845 0, transparent 35%);}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px;display:flex;flex-direction:column;gap:72px}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:.02em;line-height:1.05;margin:0;text-wrap:balance}
+p{margin:0}
+button,input{font-family:var(--body)}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--corn);outline-offset:2px}
+b{color:var(--ghost)}
+.num{font-variant-numeric:tabular-nums}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.hero h1{font-size:clamp(42px,8vw,88px);color:var(--pumpkin);text-shadow:4px 4px 0 #0d0820}
+.hero .sub{font-size:19px;color:var(--muted);margin-top:10px;max-width:40ch}
+.bucket{position:relative;width:200px;text-align:center}
+.bucket svg{width:200px;height:auto;display:block}
+.bucket .bnum{position:absolute;left:0;right:0;top:92px;font-family:var(--display);font-size:46px;color:#3a1600}
+.bucket .lbl{font-weight:900;color:var(--corn);margin-top:4px;letter-spacing:.05em;text-transform:uppercase;font-size:14px}
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.chip{background:var(--night-2);border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:800;font-variant-numeric:tabular-nums}
+.chip b{color:var(--corn)}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.toc a{color:var(--muted);text-decoration:none;font-weight:800;font-size:14px;border-bottom:2px dotted var(--line)}
+.toc a:hover{color:var(--corn)}
+
+/* chapters */
+.chapter{display:flex;flex-direction:column;gap:22px;scroll-margin-top:16px}
+.chead{display:flex;flex-direction:column;gap:8px}
+.chead .tag{font-weight:900;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--slime)}
+.chead h2{font-size:clamp(32px,5.5vw,54px);color:var(--corn)}
+.chead p{color:var(--muted);max-width:62ch;font-size:18px}
+.panel{background:var(--night-2);border:2px solid var(--line);border-radius:22px;padding:22px;min-width:0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:20px}
+.callout{font-family:var(--display);font-size:clamp(22px,3.4vw,30px);color:var(--ghost);line-height:1.15}
+.callout em{font-style:normal;color:var(--pumpkin)}
+.small{font-size:14px;color:var(--muted)}
+svg text{font-family:var(--body)}
+
+/* thermometer */
+.race{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center}
+.therm svg{width:150px;height:auto;display:block}
+.race .info{display:flex;flex-direction:column;gap:14px}
+.tonight{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--card);border-radius:16px;padding:14px}
+.tonight label{font-weight:900}
+.tonight input{width:110px;font-size:22px;font-weight:900;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--night);color:var(--corn)}
+.btn{border:none;border-radius:12px;padding:8px 14px;font-weight:900;font-size:15px;background:var(--pumpkin);color:#2b1200;box-shadow:0 3px 0 #a34e00}
+.btn.ghost{background:var(--night-2);color:var(--ghost);box-shadow:none;border:2px solid var(--line)}
+.status{font-family:var(--display);font-size:24px;line-height:1.15}
+.status.win{color:var(--slime)}
+.finale{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chart-scroll{overflow-x:auto}
+
+/* map */
+.map svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);font-weight:800}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.evinfo{min-height:64px;background:var(--card);border-radius:14px;padding:12px 16px}
+.evinfo h3{font-size:22px;color:var(--corn)}
+.lastyear{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chest{background:var(--card);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:2px}
+.chest .big{font-family:var(--display);font-size:38px;color:var(--pumpkin);line-height:1}
+.leader{display:flex;flex-direction:column;gap:8px}
+.lrow{display:grid;grid-template-columns:minmax(0,150px) 1fr 46px;gap:10px;align-items:center;font-weight:800;font-size:15px}
+.lrow .bar{height:20px;border-radius:6px}
+.lrow .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--corn)}
+.lrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* jar */
+.jarwrap{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:28px;align-items:center}
+.jar{position:relative;border:4px solid var(--muted);border-top:none;border-radius:0 0 46px 46px;padding:14px;display:flex;flex-wrap:wrap-reverse;gap:5px;justify-content:center;background:rgba(255,255,255,.04);min-height:300px;align-content:flex-start}
+.jar::before{content:"";position:absolute;top:-14px;left:-14px;right:-14px;height:14px;background:var(--muted);border-radius:8px}
+.dot{width:18px;height:18px;border-radius:50%}
+.keys{display:flex;flex-direction:column;gap:10px}
+.key{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;font-weight:800}
+.key i{width:18px;height:18px;border-radius:50%}
+.key small{display:block;color:var(--muted);font-weight:600;font-size:13px}
+.key .v{font-family:var(--display);font-size:22px;color:var(--corn);font-variant-numeric:tabular-nums}
+.tug{display:flex;flex-direction:column;gap:8px}
+.tugbar{display:flex;height:44px;border-radius:999px;overflow:hidden;border:3px solid var(--line)}
+.tugbar div{display:flex;align-items:center;padding:0 14px;font-family:var(--display);font-size:20px;color:#1c1233}
+.tugbar .rope{justify-content:flex-end}
+
+/* hall of fame */
+.hof{display:flex;flex-direction:column;gap:10px}
+.hrow{display:grid;grid-template-columns:28px minmax(0,170px) 1fr 44px;gap:10px;align-items:center;font-weight:800}
+.hrow .rank{font-family:var(--display);color:var(--muted);font-size:18px;text-align:right}
+.hrow:nth-child(1) .rank{color:var(--corn)}
+.hrow .stack{display:flex;height:24px;border-radius:7px;overflow:hidden}
+.hrow .v{font-family:var(--display);color:var(--corn);font-size:20px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:18px}
+.tcard{border-radius:20px;padding:6px;background:linear-gradient(160deg,var(--corn),var(--pumpkin));box-shadow:0 6px 0 #0d0820}
+.tcard .in{background:var(--night);border-radius:15px;padding:14px;display:flex;flex-direction:column;gap:10px;height:100%}
+.tcard .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tcard h3{font-size:22px;color:var(--ghost)}
+.tcard .hp{font-family:var(--display);color:var(--berry);font-size:18px;white-space:nowrap}
+.tcard .art{height:84px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px}
+.tcard .type{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:var(--slime)}
+.tcard .power{background:var(--card);border-radius:10px;padding:8px 10px}
+.tcard .power b{color:var(--corn);font-family:var(--display);font-weight:400;font-size:17px;letter-spacing:.02em}
+.tcard .power p{font-size:14px;color:var(--muted)}
+.tcard dl{display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin:0;font-size:14px}
+.tcard dt{color:var(--muted)} .tcard dd{margin:0;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
+
+/* rising */
+.mv{display:flex;flex-direction:column;gap:10px}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;font-weight:800}
+.mrow .pair{font-variant-numeric:tabular-nums;color:var(--muted)}
+.mrow .pair b{color:var(--slime)}
+.mv.down .mrow .pair b{color:var(--corn)}
+.panel h3{font-size:24px;margin-bottom:6px}
+
+/* awards */
+.awards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:16px}
+.award{background:var(--card);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px;border:2px solid var(--line)}
+.award .medal{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;background:var(--night)}
+.award .k{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:var(--slime)}
+.award h3{font-size:22px;color:var(--corn)}
+.award p{font-size:15px;color:var(--muted)}
+
+/* compare */
+.cmp{display:flex;flex-direction:column;gap:12px}
+.cmp .big{font-family:var(--display);font-size:clamp(38px,6vw,54px);color:var(--pumpkin);line-height:1}
+.cmp .big small{font-size:.5em;color:var(--corn)}
+.cmp h3{font-size:22px}
+.cmp p{color:var(--muted)}
+.pics{display:flex;flex-wrap:wrap;gap:4px;font-size:34px;line-height:1}
+.pics .part{display:inline-block;overflow:hidden;width:.5em;vertical-align:bottom}
+.stackviz{display:flex;align-items:flex-end;gap:14px;height:180px}
+.stackviz .col{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:800}
+.stackviz .barv{width:46px;border-radius:8px 8px 0 0}
+
+/* quiz */
+.quiz{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:16px}
+.q{border:none;text-align:left;border-radius:18px;padding:18px;min-height:170px;background:var(--pumpkin);color:#2b1200;display:flex;flex-direction:column;justify-content:space-between;gap:12px;box-shadow:0 5px 0 #a34e00;transition:background .2s}
+.q .qq{font-family:var(--display);font-size:21px;line-height:1.15;font-weight:400}
+.q .tap{font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:.1em;opacity:.8}
+.q .ans{display:none;font-weight:800}
+.q.open{background:var(--slime);box-shadow:0 5px 0 #2f8a5a;color:#0f2a1c}
+.q.open .ans{display:block}
+.q.open .tap{display:none}
+
+.method{color:var(--muted);font-size:14px;max-width:80ch}
+
+/* tax */
+.taxpie{display:flex;flex-direction:column;gap:12px}
+#pie svg{width:min(100%,260px);height:auto;display:block;margin:0 auto}
+.paysfor{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.paysfor li{display:grid;grid-template-columns:32px 1fr;gap:8px;align-items:center;font-weight:800}
+.paysfor span{font-size:24px}
+.taxbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0 16px}
+.taxout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px}
+.tbox{border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:2px;color:#1c1233}
+.tbox .who{font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.08em}
+.tbox .amt{font-family:var(--display);font-size:42px;line-height:1;font-variant-numeric:tabular-nums}
+.tbox .ex{font-size:14px;font-weight:800}
+.scenes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin-top:8px}
+.scene{background:var(--card);border-radius:16px;padding:14px;border:2px dashed var(--line);display:flex;flex-direction:column;gap:6px}
+.scene .when{font-weight:900;color:var(--corn);font-size:14px}
+.scene p{font-size:15px;color:var(--muted)}
+
+@media (max-width:700px){
+  .hero{grid-template-columns:1fr} .bucket{margin:0 auto}
+  .race,.jarwrap{grid-template-columns:1fr} .therm{justify-self:center}
+  .hrow{grid-template-columns:22px minmax(0,110px) 1fr 38px;font-size:14px}
+  .lrow{grid-template-columns:minmax(0,110px) 1fr 40px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <h1>The Great Candy Count</h1>
+      <p class="sub">Two Halloweens. Ten candy adventures. Every single piece counted. Here's the story of our candy.</p>
+      <div class="chips">
+        <span class="chip"><b>10</b> events</span>
+        <span class="chip"><b>101</b> kinds of candy</span>
+        <span class="chip">2025: <b>913</b></span>
+        <span class="chip">2026: <b>1,220</b></span>
+      </div>
+      <nav class="toc" aria-label="Chapters">
+        <a href="#race">The Big Race</a><a href="#map">Treasure Map</a><a href="#jar">Candy Jar</a><a href="#fame">Hall of Fame</a><a href="#cards">Trading Cards</a><a href="#stars">Rising Stars</a><a href="#awards">Weird Awards</a><a href="#tax">Mom &amp; Dad Tax</a><a href="#big">How Big?</a><a href="#quiz">Quiz</a>
+      </nav>
+    </div>
+    <div class="bucket" aria-label="2,133 total pieces">
+      <svg viewBox="0 0 200 190" aria-hidden="true">
+        <path d="M40 46 Q100 -14 160 46" fill="none" stroke="#c9bde6" stroke-width="6" stroke-linecap="round"/>
+        <ellipse cx="100" cy="112" rx="88" ry="74" fill="#ff8a1f"/>
+        <ellipse cx="100" cy="112" rx="88" ry="74" fill="none" stroke="#c65f00" stroke-width="4"/>
+        <path d="M60 50 Q100 40 140 50" stroke="#c65f00" stroke-width="4" fill="none"/>
+        <path d="M58 78 L76 66 L82 84 Z M142 78 L124 66 L118 84 Z" fill="#3a1600"/>
+        <path d="M55 150 Q100 175 145 150" stroke="#3a1600" stroke-width="5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="bnum">2,133</div>
+      <div class="lbl">pieces total</div>
+    </div>
+  </header>
+
+  <!-- 1 RACE -->
+  <section class="chapter" id="race">
+    <div class="chead">
+      <span class="tag">Chapter 1</span>
+      <h2>The Big Race: Did 2026 Beat 2025?</h2>
+      <p>Last year we collected <b>913</b> pieces. Going into Halloween weekend, 2026 was still behind with <b>714</b>. Then came the Trunk or Treat and Halloween night…</p>
+    </div>
+    <div class="panel race">
+      <div class="therm" id="therm"></div>
+      <div class="info">
+        <p class="status win">YES! NEW RECORD! 2026 finished with 1,220 pieces and beat 2025 by 307!</p>
+        <div class="finale">
+          <div class="chest"><span class="small">Trunk or Treat, Oct 30</span><span class="big">54</span><span class="small">Top candy: 9 Twix</span></div>
+          <div class="chest"><span class="small">Halloween night, Oct 31</span><span class="big">452</span><span class="small">Top candy: 51 Twix!</span></div>
+        </div>
+        <p class="small">Halloween night 2026 was a little smaller than Halloween night 2025 (452 vs. 511), but all the parades this fall gave 2026 a huge head start.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <h3 style="font-size:22px;margin-bottom:10px">How 2026 stacked up, event by event</h3>
+      <div class="chart-scroll"><div id="season" style="min-width:560px"></div></div>
+      <p class="small" style="margin-top:8px">Each step is one event. 2026 passed last year's total on Halloween night, the very last stop!</p>
+    </div>
+  </section>
+
+  <!-- 2 MAP -->
+  <section class="chapter" id="map">
+    <div class="chead">
+      <span class="tag">Chapter 2</span>
+      <h2>The Treasure Map</h2>
+      <p>Here are the 2026 parades and business trick-or-treats, in the order we visited. (The Trunk or Treat and Halloween night were in Chapter 1.) The bigger the bag, the more candy we found there. Tap a bag to see what we got.</p>
+    </div>
+    <div class="panel map">
+      <div id="mapSvg"></div>
+      <div class="evinfo" id="evinfo" aria-live="polite"></div>
+    </div>
+    <div class="two">
+      <div class="panel">
+        <h3>Last year's treasure chests</h3>
+        <div class="lastyear">
+          <div class="chest"><span class="small">Oct 25, 2025 event</span><span class="big">402</span><span class="small">51 different kinds. Top candy: 25 Tootsie Rolls.</span></div>
+          <div class="chest"><span class="small">Halloween night 2025</span><span class="big">511</span><span class="small">Still the biggest haul ever. Top candy: 59 Starburst!</span></div>
+        </div>
+        <p class="small" style="margin-top:10px">Most variety ever: Halloween night 2026, with <b>59</b> different kinds of candy in one night.</p>
+      </div>
+      <div class="panel">
+        <h3>Biggest hauls of all time</h3>
+        <div class="leader" id="leader"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 JAR -->
+  <section class="chapter" id="jar">
+    <div class="chead">
+      <span class="tag">Chapter 3</span>
+      <h2>The Candy Jar</h2>
+      <p>If we sorted every piece by type, what would the jar look like? Each dot stands for <b>10 pieces</b> of candy.</p>
+    </div>
+    <div class="panel jarwrap">
+      <div class="jar" id="jarEl" aria-label="Candy jar of dots, each dot is 10 pieces"></div>
+      <div class="keys" id="keys"></div>
+    </div>
+    <div class="panel tug">
+      <h3>Tug-of-war: Team Chocolate vs. Team Fruity</h3>
+      <div class="tugbar" role="img" aria-label="Team Chocolate 737, Team Fruity 853">
+        <div style="flex:737;background:var(--cocoa)">737</div>
+        <div class="rope" style="flex:853;background:var(--berry)">853</div>
+      </div>
+      <p class="callout">Team Fruity wins again! <em>Gummies and fruity chews</em> beat chocolate by 116 pieces.</p>
+      <p class="small">Team Fruity is every gummy, fruit snack and fruity chew. Lollipops, sour candy and snacks sat this one out. Chocolate came close thanks to all those Halloween night Twix and Kit Kats!</p>
+    </div>
+  </section>
+
+  <!-- 4 HALL OF FAME -->
+  <section class="chapter" id="fame">
+    <div class="chead">
+      <span class="tag">Chapter 4</span>
+      <h2>The Candy Hall of Fame</h2>
+      <p>The 10 candies we've collected the most of, ever. Orange is 2025 and green is 2026.</p>
+    </div>
+    <div class="panel">
+      <div class="legend" style="margin-bottom:14px"><span><i style="background:var(--pumpkin)"></i>2025</span><span><i style="background:var(--slime)"></i>2026</span></div>
+      <div class="hof" id="hof"></div>
+      <p class="callout" style="margin-top:18px">PHOTO FINISH! Haribo Gummy Bears win with <em>139</em>. Twix got <em>138</em>, losing by just ONE piece!</p>
+    </div>
+  </section>
+
+  <!-- 5 CARDS -->
+  <section class="chapter" id="cards">
+    <div class="chead">
+      <span class="tag">Chapter 5</span>
+      <h2>Candy Trading Cards</h2>
+      <p>Every great candy has stats and a special power. Collect them all!</p>
+    </div>
+    <div class="cards" id="cardsEl"></div>
+  </section>
+
+  <!-- 6 RISING -->
+  <section class="chapter" id="stars">
+    <div class="chead">
+      <span class="tag">Chapter 6</span>
+      <h2>Rising Stars &amp; Falling Stars</h2>
+      <p>Some candies came in way more in 2026 than in 2025. Others almost disappeared!</p>
+    </div>
+    <div class="two">
+      <div class="panel">
+        <h3 style="color:var(--slime)">Way up in 2026</h3>
+        <div class="mv" id="up"></div>
+      </div>
+      <div class="panel">
+        <h3 style="color:var(--corn)">Way down in 2026</h3>
+        <div class="mv down" id="down"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 AWARDS -->
+  <section class="chapter" id="awards">
+    <div class="chead">
+      <span class="tag">Chapter 7</span>
+      <h2>The Weird Candy Awards</h2>
+      <p>And the trophy goes to…</p>
+    </div>
+    <div class="awards" id="awardsEl"></div>
+  </section>
+
+  <!-- 8 TAX -->
+  <section class="chapter" id="tax">
+    <div class="chead">
+      <span class="tag">Chapter 8</span>
+      <h2>The Mom &amp; Dad Candy Tax</h2>
+      <p>Uh oh. Something sneaky happens while you're at school or fast asleep…</p>
+    </div>
+    <div class="panel">
+      <h3 style="color:var(--slime)">Wait, what's a tax?</h3>
+      <p style="max-width:62ch;margin-top:6px">A <b>tax</b> is when you get to keep most of what you earn, but a small piece goes to someone else to help pay for things. When grown-ups earn money at work, a piece of it goes to the city and the country as taxes. That pays for <b>schools, roads, parks, fire trucks and libraries</b> that everybody shares.</p>
+      <p style="max-width:62ch;margin-top:10px">The <b>Mom &amp; Dad Candy Tax</b> works the same way. You worked hard for that candy, so you keep most of it. Mom and Dad each take a tiny piece to "pay" for all the stuff they did to help.</p>
+    </div>
+    <div class="two">
+      <div class="panel taxpie">
+        <h3>Cut the candy into 8 slices</h3>
+        <div id="pie"></div>
+        <div class="legend"><span><i style="background:var(--pumpkin)"></i>You keep 6 slices</span><span><i style="background:var(--berry)"></i>Mom: 1 slice</span><span><i style="background:var(--sky)"></i>Dad: 1 slice</span></div>
+        <p class="small">One slice out of 8 is called <b>one eighth</b>. Mom gets one eighth, Dad gets one eighth, so together they take 2 out of 8 slices. That's the same as <b>one quarter</b>, like a quarter of a pizza.</p>
+      </div>
+      <div class="panel">
+        <h3>What Mom &amp; Dad's tax pays for</h3>
+        <ul class="paysfor">
+          <li><span>🎃</span>Buying the costume (and fixing it when it rips)</li>
+          <li><span>🚗</span>Driving to 10 different candy events</li>
+          <li><span>🔦</span>Flashlight duty in the dark</li>
+          <li><span>🎒</span>Carrying the bucket when it got too heavy</li>
+          <li><span>🧮</span>Counting all 2,133 pieces into a spreadsheet</li>
+          <li><span>🦷</span>Protecting your teeth (very important job)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>The tax calculator</h3>
+      <div class="taxbtns">
+        <button class="btn ghost" type="button" data-n="2133">All our candy (2,133)</button>
+        <button class="btn ghost" type="button" data-n="913">2025 (913)</button>
+        <button class="btn ghost" type="button" data-n="1220">2026 (1,220)</button>
+        <span class="tonight" style="padding:6px 10px"><label for="taxIn">Or type a number:</label><input id="taxIn" type="number" inputmode="numeric" min="0" max="5000" value="2133"></span>
+      </div>
+      <div class="taxout" id="taxOut" aria-live="polite"></div>
+      <p class="small">If the candy doesn't split evenly into 8, the leftovers go to you. Parents can't tax crumbs.</p>
+    </div>
+    <div class="panel">
+      <h3>Caught on the candy camera</h3>
+      <div class="scenes">
+        <div class="scene"><span class="when">🌙 11:42 PM, you're asleep</span><p>Dad tiptoes into the kitchen. "I'm just checking the Twix are still fresh." He checks 3 Twix. They were fresh.</p></div>
+        <div class="scene"><span class="when">🏫 10:15 AM, you're at school</span><p>Mom says, "Somebody has to taste-test the Reese's for safety." Mom is very, very safe.</p></div>
+        <div class="scene"><span class="when">📺 8:30 PM, after bedtime</span><p>Mom and Dad split the Kit Kats "so they don't get lonely." Every Kit Kat had a buddy.</p></div>
+        <div class="scene"><span class="when">☀️ 6:05 AM, before you wake up</span><p>Dad finds the 42 king-size bars. "King-size is a grown-up size," he says. That is not a real rule.</p></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>The good news: tax-free candy!</h3>
+      <p style="max-width:62ch">Some candies are so weird that Mom and Dad don't want them. That makes them <b>tax-free</b>, so you keep every single one: <b>Toxic Waste</b> (way too sour for grown-ups), <b>"flale"</b> (nobody knows what it is), <b>"sweetart rpes"</b> (Mom can't even read it), and the <b>Honey Straws</b> (we never found any, so there's nothing to tax).</p>
+    </div>
+  </section>
+
+  <!-- 9 HOW BIG -->
+  <section class="chapter" id="big">
+    <div class="chead">
+      <span class="tag">Chapter 9</span>
+      <h2>How Big Is 2,133 Pieces?</h2>
+      <p>That's too many to picture, so here's our candy next to things you already know.</p>
+    </div>
+    <div class="two">
+      <article class="panel cmp">
+        <div class="big">89 <small>feet tall</small></div>
+        <h3>Stacked up, it's as tall as 5 giraffes</h3>
+        <div class="pics" aria-label="5 giraffes">🦒🦒🦒🦒🦒</div>
+        <div class="stackviz" aria-hidden="true">
+          <div class="col"><div class="barv" style="height:8px;background:var(--slime)"></div>You</div>
+          <div class="col"><div class="barv" style="height:36px;background:var(--berry)"></div>Giraffe</div>
+          <div class="col"><div class="barv" style="height:50px;background:var(--muted)"></div>House</div>
+          <div class="col"><div class="barv" style="height:178px;background:var(--pumpkin)"></div>Candy</div>
+        </div>
+        <p>A tower of every piece would be about <b>as tall as an 8-story building</b>.</p>
+      </article>
+      <article class="panel cmp">
+        <div class="big">533 <small>feet long</small></div>
+        <h3>Lined up, it's 1½ football fields</h3>
+        <svg viewBox="0 0 300 74" width="100%" aria-hidden="true">
+          <text x="0" y="8" fill="#c9bde6" font-size="9" font-weight="800">Football field: 360 ft</text>
+          <rect x="0" y="12" width="203" height="30" rx="4" fill="#2f7a4a"/>
+          <g stroke="#e7f5ec" stroke-width="1.5"><line x1="17" y1="12" x2="17" y2="42"/><line x1="186" y1="12" x2="186" y2="42"/><line x1="101" y1="12" x2="101" y2="42"/></g>
+          <rect x="0" y="50" width="300" height="10" rx="5" fill="#ff8a1f"/>
+          <text x="300" y="72" fill="#ffd23f" font-size="9" font-weight="800" text-anchor="end">Our candy: 533 ft</text>
+        </svg>
+        <p>End to end, you'd walk the whole field, both end zones, and then <b>half of another field</b>.</p>
+      </article>
+      <article class="panel cmp">
+        <div class="big">44 <small>pounds</small></div>
+        <h3>As heavy as 5 gallons of milk</h3>
+        <div class="pics" aria-label="5 gallons of milk">🥛🥛🥛🥛🥛</div>
+        <p>That's about as heavy as a <b>6-year-old kid</b>. Way too heavy for one bucket!</p>
+      </article>
+      <article class="panel cmp">
+        <div class="big">5<small>¾ years</small></div>
+        <h3>One a day would last until you're almost 14</h3>
+        <div class="pics" aria-label="calendar">📅</div>
+        <p>Eat one piece a day starting now and you wouldn't run out until <b>fall 2032</b>.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- 10 QUIZ -->
+  <section class="chapter" id="quiz">
+    <div class="chead">
+      <span class="tag">Chapter 10</span>
+      <h2>Candy Quiz Time</h2>
+      <p>Make your guess out loud, then tap a card to see if you're right.</p>
+    </div>
+    <div class="quiz" id="quizEl"></div>
+  </section>
+
+  <p class="method">How we figured this out: everything comes from our candy inventory sheet. For the "How Big" numbers we guessed an average piece is about ½ inch thick, 3 inches long and ⅓ ounce, so those are estimates. Tootsie Rolls are counted as chocolate. A few names on the sheet, like "flale" and "efruttl," are spelled just as they were written down.</p>
+</div>
+
+<script>
+const COLORS={pumpkin:'#ff8a1f',corn:'#ffd23f',slime:'#7be0a6',berry:'#ff5fa2',sky:'#6fc3ff',cocoa:'#b9773f',salt:'#e9dcc3',muted:'#c9bde6',line:'#4d3a80',ghost:'#fff7ec',card:'#33245a'};
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('en-US');
+
+/* ---------- Chapter 1: race ---------- */
+const GOAL=913, FINAL=1220, BEFORE=714;
+function drawTherm(){
+  const max=1300, H=320, top=30, bulbY=top+H+36;
+  const y=v=>top+H-Math.min(v,max)/max*H;
+  let s=`<svg viewBox="0 0 150 420" role="img" aria-label="Candy meter: 2026 finished with ${fmt(FINAL)}, past the 2025 total of ${GOAL}">`;
+  s+=`<rect x="50" y="${top-8}" width="40" height="${H+20}" rx="20" fill="${COLORS.card}" stroke="${COLORS.line}" stroke-width="3"/>`;
+  s+=`<rect x="58" y="${y(BEFORE)}" width="24" height="${top+H+12-y(BEFORE)}" fill="${COLORS.pumpkin}"/>`;
+  s+=`<rect x="58" y="${y(FINAL)}" width="24" height="${y(BEFORE)-y(FINAL)}" fill="${COLORS.slime}"/>`;
+  s+=`<circle cx="70" cy="${bulbY}" r="34" fill="${COLORS.pumpkin}" stroke="#c65f00" stroke-width="3"/>`;
+  s+=`<path d="M58 ${bulbY-8} l7 -6 2 8z M82 ${bulbY-8} l-7 -6 -2 8z" fill="#3a1600"/><path d="M56 ${bulbY+10} q14 10 28 0" stroke="#3a1600" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  s+=`<rect x="64" y="${bulbY-48}" width="12" height="16" fill="${COLORS.pumpkin}"/>`;
+  s+=`<line x1="40" x2="100" y1="${y(GOAL)}" y2="${y(GOAL)}" stroke="${COLORS.corn}" stroke-width="3" stroke-dasharray="5 4"/>`;
+  s+=`<text x="104" y="${y(GOAL)+4}" fill="${COLORS.corn}" font-size="13" font-weight="900">913</text><text x="104" y="${y(GOAL)+18}" fill="${COLORS.muted}" font-size="10" font-weight="800">2025</text>`;
+  s+=`<text x="44" y="${y(BEFORE)+4}" fill="${COLORS.ghost}" font-size="13" font-weight="900" text-anchor="end">714</text>`;
+  s+=`<text x="44" y="${y(FINAL)+4}" fill="${COLORS.slime}" font-size="13" font-weight="900" text-anchor="end">1,220</text>`;
+  s+=`<text x="104" y="${y(FINAL)+4}" fill="${COLORS.slime}" font-size="11" font-weight="900">WIN!</text>`;
+  s+='</svg>';
+  $('therm').innerHTML=s;
+}
+function drawSeason(){
+  const W=640,H=270,L=46,R=110,T=16,B=40;
+  const pts=[[0,116],[7,279],[21,68],[27,127],[29,53],[33,71],[35,54],[36,452]];
+  const maxV=1300, days=36;
+  const x=d=>L+d/days*(W-L-R), y=v=>T+(H-T-B)*(1-v/maxV);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="2026 running total by event, finishing at 1,220">`;
+  [0,250,500,750,1000,1250].forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${COLORS.line}" stroke-width="1"/><text x="${L-8}" y="${y(v)+4}" fill="${COLORS.muted}" font-size="11" text-anchor="end">${fmt(v)}</text>`});
+  s+=`<line x1="${L}" x2="${W-R}" y1="${y(GOAL)}" y2="${y(GOAL)}" stroke="${COLORS.corn}" stroke-width="2.5" stroke-dasharray="6 5"/><text x="${W-R+8}" y="${y(GOAL)+4}" fill="${COLORS.corn}" font-size="12" font-weight="900">2025: 913</text>`;
+  let cum=0,path=`M${x(0)} ${y(0)}`;const dots=[];
+  pts.forEach(p=>{path+=` L${x(p[0])} ${y(cum)}`;cum+=p[1];path+=` L${x(p[0])} ${y(cum)}`;dots.push([x(p[0]),y(cum),cum])});
+  s+=`<path d="${path} L${x(36)} ${y(0)} Z" fill="${COLORS.pumpkin}" opacity=".18"/>`;
+  s+=`<path d="${path}" fill="none" stroke="${COLORS.pumpkin}" stroke-width="3.5" stroke-linejoin="round"/>`;
+  dots.forEach(([cx,cy,c],i)=>{const last=i===dots.length-1;s+=`<circle cx="${cx}" cy="${cy}" r="${last?7:5}" fill="${last?COLORS.slime:COLORS.pumpkin}" stroke="#1c1233" stroke-width="2"/>`;if(i===1||i===6)s+=`<text x="${cx-8}" y="${cy-10}" fill="${COLORS.ghost}" font-size="12" font-weight="900" text-anchor="end">${fmt(c)}</text>`;if(last)s+=`<text x="${cx+12}" y="${cy+4}" fill="${COLORS.slime}" font-size="14" font-weight="900">1,220!</text>`});
+  [['Sep 25',0],['Oct 2',7],['Oct 16',21],['Oct 28',33],['Oct 31',36]].forEach(([l,d])=>{s+=`<text x="${x(d)}" y="${H-14}" fill="${COLORS.muted}" font-size="11" text-anchor="middle">${l}</text>`});
+  s+='</svg>';$('season').innerHTML=s;
+}
+drawTherm();drawSeason();
+
+/* ---------- Chapter 2: map ---------- */
+const EVENTS=[
+ {id:'Pew',n:'Pewaukee Homecoming Parade',d:'Sep 25',x:505,y:150,v:116,k:29,top:'12 Starburst',lab:'below'},
+ {id:'Arr',n:'Arrowhead Homecoming Parade',d:'Oct 2',x:360,y:160,v:279,k:45,top:'48 Haribo Gummy Bears and 36 Charm Pops',lab:'below'},
+ {id:'KMSD',n:'KMSD Homecoming Parade',d:'Oct 16',x:240,y:330,v:68,k:20,top:'8 Frooties',lab:'below'},
+ {id:'Hart',n:'Hartland Business Trick or Treat',d:'Oct 22',x:275,y:78,v:127,k:36,top:'28 Frooties',lab:'above'},
+ {id:'Dela',n:'Delafield Business Trick or Treat',d:'Oct 24',x:165,y:205,v:53,k:23,top:'6 fruit snacks',lab:'below'},
+ {id:'Okau',n:'Okauchee Business Trick or Treat',d:'Oct 28',x:92,y:80,v:71,k:31,top:'10 Twix',lab:'above'}
+];
+function drawMap(){
+  const r=v=>8+Math.sqrt(v)*2.1;
+  let s=`<svg viewBox="0 0 600 400" role="img" aria-label="Treasure map of 2026 candy events">`;
+  s+=`<defs><pattern id="pg" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#4a3a2a" stroke-opacity=".25"/></pattern></defs>`;
+  s+=`<rect x="4" y="4" width="592" height="392" rx="22" fill="#e9d3a6"/><rect x="4" y="4" width="592" height="392" rx="22" fill="url(#pg)"/>`;
+  s+=`<rect x="4" y="4" width="592" height="392" rx="22" fill="none" stroke="#8a5a2b" stroke-width="5"/>`;
+  // lakes
+  s+=`<path d="M100 120 q30 -16 46 6 q12 22 -14 32 q-28 8 -38 -12 q-6 -14 6 -26z" fill="#7cc3e6"/>`;
+  s+=`<text x="122" y="178" fill="#2f6f8f" font-size="11" font-weight="800" text-anchor="middle">Okauchee Lake</text>`;
+  s+=`<path d="M380 196 q50 -22 100 -14 q22 6 4 16 q-50 16 -100 12 q-18 -4 -4 -14z" fill="#7cc3e6"/>`;
+  s+=`<text x="432" y="228" fill="#2f6f8f" font-size="11" font-weight="800" text-anchor="middle">Pewaukee Lake</text>`;
+  s+=`<path d="M196 236 q24 -8 34 8 q6 18 -18 20 q-24 0 -22 -14z" fill="#7cc3e6"/>`;
+  s+=`<text x="214" y="276" fill="#2f6f8f" font-size="11" font-weight="800" text-anchor="middle">Nagawicka Lake</text>`;
+  // path in visit order
+  const ord=EVENTS;let d=`M${ord[0].x} ${ord[0].y}`;
+  for(let i=1;i<ord.length;i++){const a=ord[i-1],b=ord[i];const mx=(a.x+b.x)/2+(i%2?30:-30),my=(a.y+b.y)/2+(i%2?-30:30);d+=` Q${mx} ${my} ${b.x} ${b.y}`}
+  s+=`<path d="${d}" fill="none" stroke="#8a2b2b" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>`;
+  // compass
+  s+=`<g transform="translate(548 352)"><circle r="24" fill="#f4e4c1" stroke="#8a5a2b" stroke-width="2"/><path d="M0 -20 L6 0 L0 20 L-6 0Z" fill="#8a2b2b"/><text y="-27" fill="#5a3a1a" font-size="11" font-weight="900" text-anchor="middle">N</text></g>`;
+  // start/end flags
+  EVENTS.forEach((e,i)=>{
+    const rr=r(e.v);
+    s+=`<g class="ev" data-i="${i}" tabindex="0" role="button" aria-label="${e.n}: ${e.v} pieces" style="cursor:pointer">`;
+    s+=`<path d="M${e.x-rr*.35} ${e.y-rr*.95} q${rr*.35} -${rr*.25} ${rr*.7} 0" stroke="#5a3a1a" stroke-width="3" fill="none"/>`;
+    s+=`<circle cx="${e.x}" cy="${e.y}" r="${rr}" fill="${COLORS.pumpkin}" stroke="#7a3a00" stroke-width="3"/>`;
+    s+=`<text x="${e.x}" y="${e.y+rr*.18}" fill="#2b1200" font-family="Luckiest Guy, Impact, sans-serif" font-size="${Math.max(13,rr*.55)}" text-anchor="middle">${e.v}</text>`;
+    const ly=e.lab==='above'?e.y-rr-22:e.y+rr+16;
+    s+=`<text x="${e.x}" y="${ly}" fill="#3a2410" font-size="13" font-weight="900" text-anchor="middle">${i+1}. ${e.n.split(' ')[0]}</text>`;
+    s+=`<text x="${e.x}" y="${ly+13}" fill="#6a4a2a" font-size="10.5" font-weight="800" text-anchor="middle">${e.d}</text>`;
+    if(e.id==='Arr')s+=`<text x="${e.x+rr+4}" y="${e.y-rr+8}" fill="#b0221e" font-family="Luckiest Guy, Impact, sans-serif" font-size="26">X</text>`;
+    s+='</g>';
+  });
+  s+=`<text x="30" y="372" fill="#5a3a1a" font-size="11" font-weight="800">Not to scale. Pirate-style map!</text>`;
+  s+='</svg>';
+  $('mapSvg').innerHTML=s;
+  document.querySelectorAll('.ev').forEach(g=>{const f=()=>showEv(+g.dataset.i);g.addEventListener('click',f);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();f()}})});
+}
+function showEv(i){const e=EVENTS[i];$('evinfo').innerHTML=`<h3>${e.n}</h3><p class="small">${e.d}, 2026 &middot; <b>${e.v}</b> pieces &middot; <b>${e.k}</b> different kinds &middot; Most common: <b>${e.top}</b></p>`}
+drawMap();showEv(1);
+$('evinfo').insertAdjacentHTML('afterbegin','');
+(function leader(){
+  const rows=[['Halloween 2025',511,COLORS.berry],['Halloween 2026',452,COLORS.pumpkin],['Oct 25, 2025',402,COLORS.berry],['Arrowhead',279,COLORS.pumpkin],['Hartland',127,COLORS.pumpkin],['Pewaukee',116,COLORS.pumpkin],['Okauchee',71,COLORS.pumpkin],['KMSD',68,COLORS.pumpkin],['Trunk or Treat',54,COLORS.pumpkin],['Delafield',53,COLORS.pumpkin]];
+  $('leader').innerHTML=rows.map(r=>`<div class="lrow"><span class="nm">${r[0]}</span><div class="bar" style="width:${r[1]/511*100}%;background:${r[2]}"></div><span class="v">${r[1]}</span></div>`).join('')+`<div class="legend" style="margin-top:6px"><span><i style="background:${COLORS.berry}"></i>2025</span><span><i style="background:${COLORS.pumpkin}"></i>2026</span></div>`;
+})();
+
+/* ---------- Chapter 3: jar ---------- */
+const CATS=[
+ ['Chocolate',737,COLORS.cocoa,'Twix, Kit Kat, Reese\u2019s'],
+ ['Fruity & chewy',541,COLORS.berry,'Starburst, Twizzlers, Skittles'],
+ ['Lollipops & hard candy',368,COLORS.sky,'Suckers, Smarties, Charm Pops'],
+ ['Gummies & fruit snacks',312,COLORS.slime,'Gummy Bears, Trolli, Gummy Skittles'],
+ ['Sour',152,COLORS.corn,'Sour Patch Kids, SweeTarts, Sour Punch'],
+ ['Snacks (not even candy!)',23,COLORS.salt,'Pretzels, Cheese Balls, Goldfish']
+];
+(function jar(){
+  let dots='';CATS.forEach(c=>{const n=Math.max(1,Math.round(c[1]/10));for(let i=0;i<n;i++)dots+=`<span class="dot" style="background:${c[2]}"></span>`});
+  $('jarEl').innerHTML=dots;
+  $('keys').innerHTML=CATS.map(c=>`<div class="key"><i style="background:${c[2]}"></i><span>${c[0]}<small>${c[3]}</small></span><span class="v">${c[1]}</span></div>`).join('');
+})();
+
+/* ---------- Chapter 4: hall of fame ---------- */
+const TOP=[["Haribo Gummy Bears",41,98],["Twix",52,86],["Starburst",79,48],["Kit Kat",51,55],["Reese's",53,36],["Twizzlers",37,52],["Skittles",32,49],["Tootsie Rolls",52,27],["Sour Patch Kids",39,39],["Suckers",60,14]];
+$('hof').innerHTML=TOP.map((t,i)=>{const tot=t[1]+t[2];return `<div class="hrow"><span class="rank">${i+1}</span><span>${t[0]}</span><div class="stack" style="width:${tot/139*100}%"><div style="flex:${t[1]};background:${COLORS.pumpkin}"></div><div style="flex:${t[2]};background:${COLORS.slime}"></div></div><span class="v">${tot}</span></div>`}).join('');
+
+/* ---------- Chapter 5: trading cards ---------- */
+const CARDS=[
+ {n:'Haribo Gummy Bears',hp:139,type:'Gummy',art:'🐻',bg:COLORS.slime,power:'Never Miss a Party',pd:'Showed up at all 10 events. Every. Single. One. And won the Hall of Fame!',best:'48 at Arrowhead',y:'41 → 98'},
+ {n:'Twix',hp:138,type:'Chocolate',art:'👑',bg:COLORS.corn,power:'Halloween Night Hero',pd:'51 on Halloween night 2026, plus 12 king-size bars, the most of any candy.',best:'51 on Halloween 2026',y:'52 → 86'},
+ {n:'Starburst',hp:127,type:'Fruity chew',art:'⭐',bg:COLORS.berry,power:'Record Breaker',pd:'59 in one night. Still the biggest single grab ever!',best:'59 on Halloween 2025',y:'79 → 48'},
+ {n:'Kit Kat',hp:106,type:'Chocolate',art:'🍫',bg:COLORS.cocoa,power:'Late Surge',pd:'Only 18 before Halloween, then 37 on Halloween night!',best:'37 on Halloween 2026',y:'51 → 55'},
+ {n:'Tootsie Rolls',hp:79,type:'Chocolate-ish',art:'🪵',bg:COLORS.muted,power:'Steady Eddie',pd:'Also hit all 10 events, a few at a time.',best:'27 on Halloween 2025',y:'52 → 27'},
+ {n:'Frooties',hp:58,type:'Fruity chew',art:'🚀',bg:COLORS.pumpkin,power:'Rocket Comeback',pd:'Just 6 last year, then 52 this year!',best:'28 at Hartland',y:'6 → 52'}
+];
+$('cardsEl').innerHTML=CARDS.map(c=>`<article class="tcard"><div class="in"><div class="top"><h3>${c.n}</h3><span class="hp">${c.hp} HP</span></div><div class="art" style="background:${c.bg}" aria-hidden="true">${c.art}</div><span class="type">${c.type}</span><div class="power"><b>${c.power}</b><p>${c.pd}</p></div><dl><dt>Total collected</dt><dd>${c.hp}</dd><dt>Best haul</dt><dd>${c.best}</dd><dt>2025 → 2026</dt><dd>${c.y}</dd></dl></div></article>`).join('');
+
+/* ---------- Chapter 6: rising ---------- */
+const UP=[["Haribo Gummy Bears",41,98],["Frooties",6,52],["Charm Pops",0,40],["Twix",52,86],["Gummy Skittles",0,32],["Nerds",9,28],["Lollipops",0,27],["Sour Punch",1,24]];
+const DOWN=[["Suckers",60,14],["Fruit Chews",41,2],["Jolly Ranchers",26,1],["Starburst",79,48],["Tootsie Rolls",52,27],["Reese's",53,36]];
+$('up').innerHTML=UP.map(r=>`<div class="mrow"><span>${r[0]}${r[1]===0?' <span class="small">(brand new!)</span>':''}</span><span class="pair">${r[1]} → <b>${r[2]}</b></span></div>`).join('');
+$('down').innerHTML=DOWN.map(r=>`<div class="mrow"><span>${r[0]}</span><span class="pair">${r[1]} → <b>${r[2]}</b></span></div>`).join('');
+
+/* ---------- Chapter 7: awards ---------- */
+const AWARDS=[
+ ['📸','Photo Finish','Gummy Bears beat Twix','139 to 138. The Hall of Fame was won by ONE piece!'],
+ ['🎉','Never Missed a Party','Gummy Bears, Starburst & Tootsie Rolls','The only 3 candies we got at all 10 events.'],
+ ['💪','Biggest Single Grab','59 Starburst','Halloween night 2025. Twix almost tied it with 51 on Halloween night 2026.'],
+ ['🌟','Best Newcomer','Charm Pops','Zero last year, 40 this year. 36 of them came from one parade!'],
+ ['🚀','Comeback Kid','Frooties','Went from 6 to 52. That\u2019s more than 8 times as many!'],
+ ['🦸','The Big Return','Hi-Chew','24 at the first event in 2025, then gone for 8 whole events, then 19 on Halloween night 2026!'],
+ ['🕵️','Mystery Candy','"flale," "efruttl" &amp; "sweetart rpes"','We wrote them down, but what ARE they? Investigation needed.'],
+ ['👻','Ghost Candy','Honey Straws','It\u2019s on our list, but we found zero. Spooky.'],
+ ['👑','Royal Family','42 king-size bars','Twix leads with 12 king-size, then Kit Kat with 11. New this year: king-size Starburst and Sour Punch!'],
+ ['🥨','Sneakiest Snack','23 snacks','Pretzels, Cheese Balls, Goldfish, animal crackers and even a giant cookie snuck into the bag.'],
+ ['🦄','Lonely Ones','15 one-of-a-kinds','We only got one each of Bim Bom, Bazooka, YumEarth, Goldfish and 11 more.'],
+ ['🍬','Party Crasher','28 Frooties at Hartland','Almost 1 out of every 4 pieces at Hartland was a Frootie.'],
+ ['☢️','Sour Power','Sour Punch','Just 1 last year, then 23 on Halloween night 2026 alone. Pucker up!']
+];
+$('awardsEl').innerHTML=AWARDS.map(a=>`<article class="award"><span class="medal" aria-hidden="true">${a[0]}</span><span class="k">${a[1]}</span><h3>${a[2]}</h3><p>${a[3]}</p></article>`).join('');
+
+/* ---------- Chapter 9: quiz ---------- */
+const QUIZ=[
+ ['Did 2026 beat 2025?','YES! 1,220 to 913. A new record by 307 pieces!'],
+ ['Which candy won the Hall of Fame?','Haribo Gummy Bears, 139 to 138 over Twix. Won by ONE piece!'],
+ ['Which event gave us the most candy ever?','Halloween night 2025, with 511 pieces!'],
+ ['How many different kinds of candy have we collected?','101 kinds!'],
+ ['Who wins: chocolate or fruity candy?','Team Fruity, 853 to 737.'],
+ ['How many king-size bars have we gotten?','42! Twix has the most with 12.'],
+ ['Which candies showed up at every single event?','Gummy Bears, Starburst and Tootsie Rolls.'],
+ ['What was the biggest grab of one candy at one event?','59 Starburst on Halloween night 2025. Second place: 51 Twix on Halloween night 2026.'],
+ ['What was the smallest haul?','Delafield, with 53 pieces. The Trunk or Treat was right behind with 54.'],
+ ['If Mom and Dad each take one eighth, how much do they take together?','One quarter! 2 slices out of 8. For all our candy, that\u2019s 532 pieces.']
+];
+$('quizEl').innerHTML=QUIZ.map((q,i)=>`<button class="q" type="button" aria-expanded="false" id="q${i}"><span class="qq">${q[0]}</span><span class="tap">Tap to reveal</span><span class="ans">${q[1]}</span></button>`).join('');
+document.querySelectorAll('.q').forEach(b=>b.onclick=()=>{b.classList.toggle('open');b.setAttribute('aria-expanded',b.classList.contains('open'))});
+</script>
+</body>
+</html>
